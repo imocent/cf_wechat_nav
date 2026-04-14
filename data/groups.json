@@ -1,0 +1,134 @@
+[
+  {
+    "id": "1",
+    "name": "副业项目交流群",
+    "categoryId": "1",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 1266,
+    "countryId": "1",
+    "provinceId": "3",
+    "cityId": "8",
+    "status": "approved"
+  },
+  {
+    "id": "2",
+    "name": "网赚资源分享",
+    "categoryId": "2",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 3421,
+    "countryId": "1",
+    "provinceId": "4",
+    "cityId": "10",
+    "status": "approved"
+  },
+  {
+    "id": "3",
+    "name": "AI技术学习群",
+    "categoryId": "3",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 892,
+    "countryId": "1",
+    "provinceId": "2",
+    "cityId": "5",
+    "status": "approved"
+  },
+  {
+    "id": "4",
+    "name": "程序员接单群",
+    "categoryId": "1",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 2103,
+    "countryId": "1",
+    "provinceId": "1",
+    "cityId": "2",
+    "status": "approved"
+  },
+  {
+    "id": "5",
+    "name": "影视资源分享",
+    "categoryId": "2",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 5621,
+    "countryId": "1",
+    "provinceId": "4",
+    "cityId": "11",
+    "status": "approved"
+  },
+  {
+    "id": "6",
+    "name": "健身打卡群",
+    "categoryId": "4",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 743,
+    "countryId": "1",
+    "provinceId": "5",
+    "cityId": "12",
+    "status": "approved"
+  },
+  {
+    "id": "7",
+    "name": "创业合伙人",
+    "categoryId": "5",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 1532,
+    "countryId": "1",
+    "provinceId": "3",
+    "cityId": "7",
+    "status": "approved"
+  },
+  {
+    "id": "8",
+    "name": "Python学习交流",
+    "categoryId": "3",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 2216,
+    "countryId": "1",
+    "provinceId": "1",
+    "cityId": "3",
+    "status": "approved"
+  },
+  {
+    "id": "9",
+    "name": "美食探店群",
+    "categoryId": "4",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 987,
+    "countryId": "1",
+    "provinceId": "2",
+    "cityId": "6",
+    "status": "approved"
+  },
+  {
+    "id": "10",
+    "name": "电商运营交流",
+    "categoryId": "1",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 4125,
+    "countryId": "1",
+    "provinceId": "3",
+    "cityId": "9",
+    "status": "approved"
+  },
+  {
+    "id": "11",
+    "name": "考研资料共享",
+    "categoryId": "2",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 6732,
+    "countryId": "1",
+    "provinceId": "5",
+    "cityId": "13",
+    "status": "approved"
+  },
+  {
+    "id": "12",
+    "name": "游戏开黑组队",
+    "categoryId": "4",
+    "qrcode": "/qrcode-placeholder.svg",
+    "views": 3256,
+    "countryId": "2",
+    "provinceId": "6",
+    "cityId": "14",
+    "status": "approved"
+  }
+]

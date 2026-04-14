@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/api/categories)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3000/api/regions)",
+      "Bash(curl -s http://localhost:3000/api/share)",
+      "Bash(curl -s http://localhost:3000/api/groups)",
+      "Bash(curl -s http://localhost:3000/admin/share)",
+      "Bash(curl -s http://localhost:3000/api/regions/dtree)",
+      "Bash(node *)"
+    ]
+  }
+}

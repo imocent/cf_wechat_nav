@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "title": "优质项目推荐",
+    "description": "最新副业项目，日入500+，点击了解详情",
+    "link": "https://example.com",
+    "image": "",
+    "position": "top",
+    "status": "active",
+    "startDate": "2024-01-01",
+    "endDate": "2024-12-31",
+    "views": 5
+  }
+]
