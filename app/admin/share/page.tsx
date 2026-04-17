@@ -14,42 +14,6 @@ interface Share {
     views: number;
 }
 
-interface LayuiTable {
-    render: (options: {
-        elem: string;
-        url: string;
-        page: boolean;
-        limits: number[];
-        limit: number;
-        cols: unknown[][];
-        parseData?: (res: { code: number; msg: string; count: number; data: Share[] }) => {
-            code: number;
-            msg: string;
-            count: number;
-            data: Share[];
-        };
-        done?: (res: { data: Share[] }) => void;
-    }) => {
-        reload: () => void;
-    };
-}
-
-interface Layui {
-    use: (modules: string[], callback: (table: LayuiTable) => void) => void;
-    table: {
-        on: (event: string, callback: (obj: { data: Share; event: string }) => void) => void;
-    };
-    laydate: {
-        render: (options: {
-            elem: string;
-            type: string;
-            format: string;
-            value?: string;
-            done: (value: string) => void;
-        }) => void;
-    };
-}
-
 export default function Share() {
     const [showModal, setShowModal] = useState(false);
     const [editItem, setEditItem] = useState<Share | null>(null);
@@ -64,25 +28,17 @@ export default function Share() {
         startDate: '',
         endDate: ''
     });
-    const tableRef = useRef<LayuiTable['render']['return'] | null>(null);
+    const tableRef = useRef<any>(null);
 
     useEffect(() => {
-        const checkLayui = setInterval(() => {
-            const layui = (window as unknown as { layui?: Layui }).layui;
-            if (layui) {
-                clearInterval(checkLayui);
-                initTable();
-            }
-        }, 100);
-
-        return () => clearInterval(checkLayui);
+        initTable();
     }, []);
 
     const initTable = () => {
-        const layui = (window as unknown as { layui?: Layui }).layui;
+        const layui = window.layui;
         if (!layui) return;
 
-        layui.use(['table'], function(table: LayuiTable) {
+        layui.use(['table', 'layer'], function(table: any, layer: any) {
             tableRef.current = table.render({
                 elem: '#shareTable',
                 url: '/api/share',
@@ -139,14 +95,23 @@ export default function Share() {
                 }
             });
 
-            layui.table.on('tool(shareTable)', function(obj: { data: Share; event: string }) {
+            table.on('tool(shareTable)', function(obj: any) {
                 if (obj.event === 'edit') {
                     handleEdit(obj.data);
                 } else if (obj.event === 'del') {
-                    if (confirm('确定要删除这个分享吗？')) {
+                    layer.confirm('确定要删除这个分享吗？', {icon: 3, title: '提示'}, function(index: any) {
                         fetch(`/api/share?id=${obj.data.id}`, {method: 'DELETE'})
-                            .then(() => tableRef.current?.reload());
-                    }
+                            .then(res => res.json())
+                            .then((result: { code: number }) => {
+                                if (result.code === 0) {
+                                    layer.msg('删除成功', {icon: 1});
+                                    tableRef.current?.reload();
+                                } else {
+                                    layer.msg('删除失败', {icon: 2});
+                                }
+                                layer.close(index);
+                            });
+                    });
                 }
             });
         });
@@ -202,32 +167,7 @@ export default function Share() {
             endDate: item.endDate || ''
         });
         setShowModal(true);
-
-        setTimeout(() => {
-            const layui = (window as unknown as { layui?: Layui }).layui;
-            if (!layui) return;
-
-            layui.use(['laydate'], (laydate: Layui['laydate']) => {
-                laydate.render({
-                    elem: '#startDateInput',
-                    type: 'date',
-                    format: 'yyyy-MM-dd',
-                    value: item.startDate,
-                    done: (value: string) => {
-                        setFormData(prev => ({...prev, startDate: value}));
-                    }
-                });
-                laydate.render({
-                    elem: '#endDateInput',
-                    type: 'date',
-                    format: 'yyyy-MM-dd',
-                    value: item.endDate,
-                    done: (value: string) => {
-                        setFormData(prev => ({...prev, endDate: value}));
-                    }
-                });
-            });
-        }, 100);
+        initDatePickers(item.startDate, item.endDate);
     };
 
     const resetForm = () => {
@@ -244,30 +184,30 @@ export default function Share() {
         setEditItem(null);
     };
 
-    const initDatePickers = () => {
-        setTimeout(() => {
-            const layui = (window as unknown as { layui?: Layui }).layui;
-            if (!layui) return;
+    const initDatePickers = (startValue?: string, endValue?: string) => {
+        const layui = window.layui;
+        if (!layui) return;
 
-            layui.use(['laydate'], (laydate: Layui['laydate']) => {
-                laydate.render({
-                    elem: '#startDateInput',
-                    type: 'date',
-                    format: 'yyyy-MM-dd',
-                    done: (value: string) => {
-                        setFormData(prev => ({...prev, startDate: value}));
-                    }
-                });
-                laydate.render({
-                    elem: '#endDateInput',
-                    type: 'date',
-                    format: 'yyyy-MM-dd',
-                    done: (value: string) => {
-                        setFormData(prev => ({...prev, endDate: value}));
-                    }
-                });
+        layui.use(['laydate'], function(laydate: any) {
+            laydate.render({
+                elem: '#startDateInput',
+                type: 'date',
+                format: 'yyyy-MM-dd',
+                value: startValue,
+                done: (value: string) => {
+                    setFormData(prev => ({...prev, startDate: value}));
+                }
             });
-        }, 100);
+            laydate.render({
+                elem: '#endDateInput',
+                type: 'date',
+                format: 'yyyy-MM-dd',
+                value: endValue,
+                done: (value: string) => {
+                    setFormData(prev => ({...prev, endDate: value}));
+                }
+            });
+        });
     };
 
     return (

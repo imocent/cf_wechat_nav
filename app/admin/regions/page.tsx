@@ -31,44 +31,6 @@ interface TreeNode {
     children?: TreeNode[];
 }
 
-interface LayuiDTree {
-    renderSelect: (options: {
-        elem: string;
-        data: unknown[];
-        selectTips?: string;
-        done?: (data: unknown, obj: unknown, first: boolean) => void;
-    }) => {
-        dataInit: (id: string) => void;
-        selectVal: (id: string) => void;
-    };
-}
-
-interface Layui {
-    use: (modules: string[], callback: (...args: unknown[]) => void) => void;
-    dtree: {
-        renderSelect: LayuiDTree['renderSelect'];
-        on: (event: string, callback: (param: unknown) => void) => void;
-    };
-    treeTable: {
-        render: (options: {
-            elem: string;
-            data: TreeNode[];
-            tree: {
-                customName: { children: string };
-                view: { expandAll: boolean; showIcon: boolean; indent: number };
-            };
-            cols: unknown[][];
-            style?: string;
-        }) => {
-            reloadData?: (options: { data: TreeNode[] }) => void;
-            reload?: (options: { data: TreeNode[] }) => void;
-        };
-    };
-    table: {
-        on: (event: string, callback: (obj: { data: TreeNode | { data: TreeNode }; event: string }) => void) => void;
-    };
-}
-
 export default function Regions() {
     const [regions, setRegions] = useState<{
         countries: Country[];
@@ -85,27 +47,14 @@ export default function Regions() {
         type: 'country' | 'province' | 'city' | null;
     }>({id: '', name: '', type: null});
     const [formData, setFormData] = useState({name: '', code: '', zipCode: ''});
-    const tableRef = useRef<{ reloadData?: (options: { data: TreeNode[] }) => void; reload?: (options: { data: TreeNode[] }) => void } | null>(null);
+    const tableRef = useRef<any>(null);
 
     useEffect(() => {
-        let attempts = 0;
-        const checkLayui = setInterval(() => {
-            attempts++;
-            const layui = (window as unknown as { layui?: Layui }).layui;
-            if (layui) {
-                clearInterval(checkLayui);
-                loadRegions().then((data) => {
-                    if (data) {
-                        initTable(data);
-                    }
-                });
-            } else if (attempts > 50) {
-                clearInterval(checkLayui);
-                alert('Layui 加载失败，请刷新页面重试');
+        loadRegions().then((data) => {
+            if (data) {
+                initTable(data);
             }
-        }, 100);
-
-        return () => clearInterval(checkLayui);
+        });
     }, []);
 
     const buildTreeDataFromRaw = (data: { countries: Country[]; provinces: Province[]; cities: City[] }): TreeNode[] => {
@@ -177,13 +126,10 @@ export default function Regions() {
     };
 
     const initTable = (initialData?: { countries: Country[]; provinces: Province[]; cities: City[] }) => {
-        const layui = (window as unknown as { layui?: Layui }).layui;
-        if (!layui?.treeTable) {
-            alert('treeTable 模块未加载，请检查 Layui 版本');
-            return;
-        }
+        const layui = window.layui;
+        if (!layui) return;
 
-        layui.use(['treeTable', 'table'], function(treeTable: Layui['treeTable'], table: Layui['table']) {
+        layui.use(['treeTable', 'table'], function(treeTable: any, table: any) {
             const treeData = buildTreeDataFromRaw(initialData || {countries: [], provinces: [], cities: []});
 
             tableRef.current = treeTable.render({
@@ -205,8 +151,8 @@ export default function Regions() {
                         field: 'code',
                         title: '国家代码',
                         width: 120,
-                        templet: function(d: { data?: TreeNode } | TreeNode) {
-                            const node = 'data' in d ? d.data : d;
+                        templet: function(d: any) {
+                            const node = d.data || d;
                             return node.type === 'country' ? (node.code || '-') : '-';
                         }
                     },
@@ -214,8 +160,8 @@ export default function Regions() {
                         field: 'zipCode',
                         title: '邮编',
                         width: 120,
-                        templet: function(d: { data?: TreeNode } | TreeNode) {
-                            const node = 'data' in d ? d.data : d;
+                        templet: function(d: any) {
+                            const node = d.data || d;
                             return node.type === 'city' || node.type === 'province' ? (node.zipCode || '-') : '-';
                         }
                     },
@@ -223,8 +169,8 @@ export default function Regions() {
                         field: 'type',
                         title: '类型',
                         width: 100,
-                        templet: function(d: { data?: TreeNode } | TreeNode) {
-                            const node = 'data' in d ? d.data : d;
+                        templet: function(d: any) {
+                            const node = d.data || d;
                             const types = {country: '国家级', province: '省/州级', city: '城市级'};
                             const color = node.type === 'country' ? 'blue' : node.type === 'province' ? 'green' : 'orange';
                             return `<span class="layui-badge layui-bg-${color}">${types[node.type]}</span>`;
@@ -234,8 +180,8 @@ export default function Regions() {
                         fixed: 'right',
                         title: '操作',
                         align: 'center',
-                        templet: function(d: { data?: TreeNode } | TreeNode) {
-                            const node = 'data' in d ? d.data : d;
+                        templet: function(d: any) {
+                            const node = d.data || d;
                             return `
                                 <a class="layui-btn layui-btn-xs" lay-event="edit" data-id="${node.id}">编辑</a>
                                 <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" data-id="${node.id}">删除</a>
@@ -246,8 +192,8 @@ export default function Regions() {
                 style: 'margin-bottom: 20px;'
             });
 
-            table.on('tool(regionTable)', function(obj: { data: TreeNode | { data: TreeNode }; event: string }) {
-                const node = 'data' in obj.data && obj.data.data ? obj.data.data : obj.data as TreeNode;
+            table.on('tool(regionTable)', function(obj: any) {
+                const node = obj.data?.data || obj.data;
                 if (obj.event === 'edit') {
                     handleEdit(node);
                 } else if (obj.event === 'del') {
@@ -269,10 +215,10 @@ export default function Regions() {
         elem.innerHTML = '';
         elem.className = 'dtree';
 
-        const layui = (window as unknown as { layui?: Layui }).layui;
+        const layui = window.layui;
         if (!layui) return;
 
-        layui.use(['dtree'], function(dtree: Layui['dtree']) {
+        layui.use(['dtree'], function(dtree: any) {
             fetch('/api/regions/dtree')
                 .then(res => res.json())
                 .then((apiData: { data: unknown[] }) => {
@@ -291,16 +237,16 @@ export default function Regions() {
                         }
                     });
 
-                    dtree.on('node("parentTreeSelect")', function(param: unknown) {
-                        const nodeData = typeof param === 'object' && param !== null && 'param' in param ? (param as { param: { nodeId?: string; id?: string; context?: string; title?: string } }).param : param;
-                        const nodeId = String((nodeData as { nodeId?: string; id?: string }).nodeId || (nodeData as { id?: string }).id || '');
+                    dtree.on('node("parentTreeSelect")', function(param: any) {
+                        const nodeData = param?.param || param;
+                        const nodeId = String(nodeData?.nodeId || nodeData?.id || '');
 
                         if (nodeId === '0') {
                             setSelectedParent({id: '', name: '', type: null});
                             return;
                         }
 
-                        const nodeName = (nodeData as { context?: string; title?: string }).context || (nodeData as { title?: string }).title || '';
+                        const nodeName = nodeData?.context || nodeData?.title || '';
                         const nodeType = regions.countries.find(c => c.id === nodeId) ? 'country' : 'province';
                         setSelectedParent({
                             id: nodeId,
@@ -343,10 +289,7 @@ export default function Regions() {
         }
 
         setShowModal(true);
-
-        setTimeout(() => {
-            initSelectTree(node.parentId);
-        }, 100);
+        initSelectTree(node.parentId);
     };
 
     const handleAdd = () => {
@@ -355,10 +298,7 @@ export default function Regions() {
         setEditItem(null);
         setFormData({name: '', code: '', zipCode: ''});
         setShowModal(true);
-
-        setTimeout(() => {
-            initSelectTree();
-        }, 100);
+        initSelectTree();
     };
 
     const handleDelete = async (node: TreeNode) => {
@@ -672,22 +612,18 @@ export default function Regions() {
             }}></div>}
 
             <style jsx global>{`
-                /* 修复 treeTable 子节点白色背景问题 */
                 .layui-table tbody tr {
                     background-color: transparent !important;
                 }
                 .layui-table tbody tr:hover {
                     background-color: #f2f2f2 !important;
                 }
-                /* treeTable 子节点行样式 */
                 .layui-tree-table-line {
                     background-color: transparent !important;
                 }
-                /* 展开的子节点容器背景 */
                 .layui-table-main {
                     background-color: transparent !important;
                 }
-                /* DTree 选择框样式 */
                 .dtree-select {
                     background: #fff !important;
                 }
@@ -697,14 +633,12 @@ export default function Regions() {
                 .dtree-select-input {
                     background: #fff !important;
                 }
-                /* treeTable 特定样式 - 展开行背景 */
                 .layui-table[lay-filter="regionTable"] tr {
                     background-color: transparent !important;
                 }
                 .layui-table[lay-filter="regionTable"] tr.layui-table-hover {
                     background-color: #f8f8f8 !important;
                 }
-                /* 子节点的缩进容器 */
                 .layui-table-cell {
                     background-color: transparent !important;
                 }

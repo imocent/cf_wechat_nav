@@ -35,32 +35,6 @@ interface City {
     name: string;
 }
 
-interface LayuiTable {
-    render: (options: {
-        elem: string;
-        url: string;
-        page: boolean;
-        limits: number[];
-        limit: number;
-        cols: unknown[][];
-        parseData?: (res: { code: number; msg: string; count: number; data: Group[] }) => {
-            code: number;
-            msg: string;
-            count: number;
-            data: Group[];
-        };
-    }) => {
-        reload: () => void;
-    };
-}
-
-interface Layui {
-    use: (modules: string[], callback: (table: LayuiTable) => void) => void;
-    table: {
-        on: (event: string, callback: (obj: { data: Group; event: string }) => void) => void;
-    };
-}
-
 export default function Groups() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [regions, setRegions] = useState<{
@@ -81,7 +55,7 @@ export default function Groups() {
         status: 'pending' as 'pending' | 'approved' | 'rejected'
     });
     const [uploading, setUploading] = useState(false);
-    const tableRef = useRef<LayuiTable['render']['return'] | null>(null);
+    const tableRef = useRef<any>(null);
     const categoriesRef = useRef<Category[]>([]);
 
     useEffect(() => {
@@ -101,26 +75,17 @@ export default function Groups() {
             setCategories(cats);
             categoriesRef.current = cats;
             setRegions(regs);
-
-            const checkLayui = setInterval(() => {
-                const layui = (window as unknown as { layui?: Layui }).layui;
-                if (layui) {
-                    clearInterval(checkLayui);
-                    initTable();
-                }
-            }, 100);
-
-            return () => clearInterval(checkLayui);
+            initTable();
         } catch {
             alert('加载数据失败');
         }
     };
 
     const initTable = () => {
-        const layui = (window as unknown as { layui?: Layui }).layui;
+        const layui = window.layui;
         if (!layui) return;
 
-        layui.use(['table'], function(table: LayuiTable) {
+        layui.use(['table', 'layer'], function(table: any, layer: any) {
             tableRef.current = table.render({
                 elem: '#groupTable',
                 url: '/api/groups',
@@ -188,30 +153,47 @@ export default function Groups() {
                 }
             });
 
-            layui.table.on('tool(groupTable)', function(obj: { data: Group; event: string }) {
+            table.on('tool(groupTable)', function(obj: any) {
                 if (obj.event === 'edit') {
                     handleEdit(obj.data);
                 } else if (obj.event === 'del') {
-                    if (confirm('确定要删除这个群组吗？')) {
+                    layer.confirm('确定要删除这个群组吗？', {icon: 3, title: '提示'}, function(index: any) {
                         fetch(`/api/groups?id=${obj.data.id}`, {method: 'DELETE'})
-                            .then(() => tableRef.current?.reload());
-                    }
+                            .then(res => res.json())
+                            .then((result: { code: number }) => {
+                                if (result.code === 0) {
+                                    layer.msg('删除成功', {icon: 1});
+                                    tableRef.current?.reload();
+                                } else {
+                                    layer.msg('删除失败', {icon: 2});
+                                }
+                                layer.close(index);
+                            });
+                    });
                 } else if (obj.event === 'approve') {
-                    if (confirm(`确定通过群组"${obj.data.name}"的审核吗？`)) {
+                    layer.confirm(`确定通过群组"${obj.data.name}"的审核吗？`, {icon: 3, title: '提示'}, function(index: any) {
                         fetch('/api/groups', {
                             method: 'PUT',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({id: obj.data.id, action: 'approve'})
-                        }).then(() => tableRef.current?.reload());
-                    }
+                        }).then(() => {
+                            layer.msg('审核通过', {icon: 1});
+                            tableRef.current?.reload();
+                            layer.close(index);
+                        });
+                    });
                 } else if (obj.event === 'reject') {
-                    if (confirm(`确定拒绝群组"${obj.data.name}"吗？`)) {
+                    layer.confirm(`确定拒绝群组"${obj.data.name}"吗？`, {icon: 3, title: '提示'}, function(index: any) {
                         fetch('/api/groups', {
                             method: 'PUT',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({id: obj.data.id, action: 'reject'})
-                        }).then(() => tableRef.current?.reload());
-                    }
+                        }).then(() => {
+                            layer.msg('已拒绝', {icon: 1});
+                            tableRef.current?.reload();
+                            layer.close(index);
+                        });
+                    });
                 }
             });
         });
