@@ -1,9 +1,8 @@
-import fs from 'fs';
 import { NextRequest } from 'next/server';
-const file = 'data/categories.json';
+import { readJSON, writeJSON } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('categories.json');
     const page = parseInt(req.nextUrl.searchParams.get('page') || '1');
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
 
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('categories.json');
 
     // 获取现有最大数字 ID
     const maxId = list.reduce((max: number, item: any) => {
@@ -34,18 +33,18 @@ export async function POST(req: NextRequest) {
         ...body
     });
 
-    fs.writeFileSync(file, JSON.stringify(list, null, 2));
+    writeJSON('categories.json', list);
     return Response.json({ code: 0, msg: '添加成功' });
 }
 
 export async function PUT(req: NextRequest) {
     const body = await req.json();
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('categories.json');
 
     const idx = list.findIndex((item: any) => item.id === body.id);
     if (idx !== -1) {
         list[idx] = { ...list[idx], ...body };
-        fs.writeFileSync(file, JSON.stringify(list, null, 2));
+        writeJSON('categories.json', list);
         return Response.json({ code: 0, msg: '更新成功' });
     }
 
@@ -54,10 +53,10 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     const id = req.nextUrl.searchParams.get('id');
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('categories.json');
 
     const newList = list.filter((item: any) => item.id !== id);
 
-    fs.writeFileSync(file, JSON.stringify(newList, null, 2));
+    writeJSON('categories.json', newList);
     return Response.json({ success: true });
 }

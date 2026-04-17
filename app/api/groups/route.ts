@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import fs from 'fs';
-const file = 'data/groups.json';
+import { readJSON, writeJSON } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('groups.json');
     const page = parseInt(req.nextUrl.searchParams.get('page') || '1');
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '10');
 
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('groups.json');
 
     // 获取现有最大数字 ID
     const maxId = list.reduce((max: number, item: any) => {
@@ -36,23 +35,23 @@ export async function POST(req: NextRequest) {
         ...body
     });
 
-    fs.writeFileSync(file, JSON.stringify(list, null, 2));
+    writeJSON('groups.json', list);
     return Response.json({ success: true });
 }
 
 export async function DELETE(req: NextRequest) {
     const id = req.nextUrl.searchParams.get('id');
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('groups.json');
 
     const newList = list.filter((g: any) => String(g.id) !== id);
-    fs.writeFileSync(file, JSON.stringify(newList, null, 2));
+    writeJSON('groups.json', newList);
 
     return Response.json({ success: true });
 }
 
 export async function PUT(req: NextRequest) {
     const body = await req.json();
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const list = readJSON('groups.json');
 
     const idx = list.findIndex((g: any) => String(g.id) === String(body.id));
     if (idx !== -1) {
@@ -69,6 +68,6 @@ export async function PUT(req: NextRequest) {
         }
     }
 
-    fs.writeFileSync(file, JSON.stringify(list, null, 2));
+    writeJSON('groups.json', list);
     return Response.json({ success: true });
 }
