@@ -9,7 +9,9 @@
       "Bash(curl -s http://localhost:3000/api/groups)",
       "Bash(curl -s http://localhost:3000/admin/share)",
       "Bash(curl -s http://localhost:3000/api/regions/dtree)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(rm package-lock.json)",
+      "Bash(npm install *)"
     ]
   }
 }
