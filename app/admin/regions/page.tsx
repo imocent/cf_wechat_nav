@@ -177,9 +177,9 @@ export default function Regions() {
                         width: 100,
                         templet: function(d: any) {
                             const node = d.data || d;
-                            const types = {country: '国家级', province: '省/州级', city: '城市级'};
+                            const types: Record<string, string> = {country: '国家级', province: '省/州级', city: '城市级'};
                             const color = node.type === 'country' ? 'blue' : node.type === 'province' ? 'green' : 'orange';
-                            return `<span class="layui-badge layui-bg-${color}">${types[node.type]}</span>`;
+                            return `<span class="layui-badge layui-bg-${color}">${types[node.type] || '-'}</span>`;
                         }
                     },
                     {

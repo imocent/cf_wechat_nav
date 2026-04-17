@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 declare global {
     interface Window {
@@ -36,36 +36,63 @@ export default function Admin() {
     const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([]);
     const tableRef = useRef<any>(null);
 
-    useEffect(() => {
-        fetchStats();
-        updateServerTime();
-        const timeInterval = setInterval(updateServerTime, 1000);
-        return () => clearInterval(timeInterval);
+    const fetchStats = useCallback(async () => {
+        try {
+            const [groupsRes, catsRes, regionsRes, adsRes] = await Promise.all([
+                fetch('/api/groups'),
+                fetch('/api/categories'),
+                fetch('/api/regions'),
+                fetch('/api/share')
+            ]);
+
+            const groupsData = await groupsRes.json() as { code: number; data?: { views?: number; createdAt?: string; id: string; name: string }[] };
+            const catsData = await catsRes.json() as { code: number; data?: unknown[] } | unknown[];
+            const regionsData = await regionsRes.json() as { countries?: unknown[]; provinces?: unknown[]; cities?: unknown[] };
+            const adsData = await adsRes.json() as { code: number; data?: unknown[] } | unknown[];
+
+            const groups = Array.isArray(groupsData) ? groupsData : (groupsData.data || []);
+            const categories = Array.isArray(catsData) ? catsData : (catsData.data || []);
+            const ads = Array.isArray(adsData) ? adsData : (adsData.data || []);
+
+            const totalViews = groups.reduce((sum, g) => sum + (g.views || 0), 0);
+
+            const today = new Date().toDateString();
+            const newGroupsToday = groups.filter(g => {
+                const createdDate = new Date(g.createdAt || g.id).toDateString();
+                return createdDate === today;
+            }).length;
+
+            const sortedGroups = [...groups]
+                .sort((a, b) => parseInt(b.id) - parseInt(a.id))
+                .slice(0, 5)
+                .map(g => ({
+                    id: g.id,
+                    name: g.name,
+                    createdAt: g.createdAt || new Date().toISOString()
+                }));
+
+            const totalCountries = regionsData.countries?.length || 0;
+            const totalProvinces = regionsData.provinces?.length || 0;
+            const totalCities = regionsData.cities?.length || 0;
+
+            setStats(prev => ({
+                totalGroups: groups.length,
+                totalCategories: categories.length,
+                totalRegions: totalCountries + totalProvinces + totalCities,
+                totalAds: ads.length,
+                totalViews,
+                newGroupsToday,
+                serverTime: prev.serverTime
+            }));
+            setRecentGroups(sortedGroups);
+        } catch {
+            alert('加载数据失败');
+        }
     }, []);
 
-    useEffect(() => {
-        if (recentGroups.length > 0) {
-            initRecentTable();
-        }
-    }, [recentGroups]);
-
-    const updateServerTime = () => {
-        const now = new Date();
-        const timeStr = now.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-        setStats(prev => ({ ...prev, serverTime: timeStr }));
-    };
-
-    const initRecentTable = () => {
+    const initRecentTable = useCallback(() => {
         const layui = window.layui;
-        if (!layui) return;
+        if (!layui || recentGroups.length === 0) return;
 
         layui.use(['table'], function(table: any) {
             tableRef.current = table.render({
@@ -93,66 +120,32 @@ export default function Admin() {
                 page: false
             });
         });
-    };
+    }, [recentGroups]);
 
-    const fetchStats = async () => {
-        try {
-            const [groupsRes, catsRes, regionsRes, adsRes] = await Promise.all([
-                fetch('/api/groups'),
-                fetch('/api/categories'),
-                fetch('/api/regions'),
-                fetch('/api/share')
-            ]);
+    useEffect(() => {
+        fetchStats();
+        updateServerTime();
+        const timeInterval = setInterval(updateServerTime, 1000);
+        return () => clearInterval(timeInterval);
+    }, [fetchStats]);
 
-            const groupsData = await groupsRes.json() as { code: number; data?: { views?: number; createdAt?: string; id: string; name: string }[] };
-            const catsData = await catsRes.json() as { code: number; data?: unknown[] } | unknown[];
-            const regionsData = await regionsRes.json() as { countries?: unknown[]; provinces?: unknown[]; cities?: unknown[] };
-            const adsData = await adsRes.json() as { code: number; data?: unknown[] } | unknown[];
+    useEffect(() => {
+        initRecentTable();
+    }, [initRecentTable]);
 
-            // 处理群组数据 - 可能是分页格式
-            const groups = Array.isArray(groupsData) ? groupsData : (groupsData.data || []);
-
-            // 处理分类数据
-            const categories = Array.isArray(catsData) ? catsData : (catsData.data || []);
-
-            // 处理分享数据
-            const ads = Array.isArray(adsData) ? adsData : (adsData.data || []);
-
-            const totalViews = groups.reduce((sum, g) => sum + (g.views || 0), 0);
-
-            const today = new Date().toDateString();
-            const newGroupsToday = groups.filter(g => {
-                const createdDate = new Date(g.createdAt || g.id).toDateString();
-                return createdDate === today;
-            }).length;
-
-            const sortedGroups = [...groups]
-                .sort((a, b) => parseInt(b.id) - parseInt(a.id))
-                .slice(0, 5)
-                .map(g => ({
-                    id: g.id,
-                    name: g.name,
-                    createdAt: g.createdAt || new Date().toISOString()
-                }));
-
-            const totalCountries = regionsData.countries?.length || 0;
-            const totalProvinces = regionsData.provinces?.length || 0;
-            const totalCities = regionsData.cities?.length || 0;
-
-            setStats({
-                totalGroups: groups.length,
-                totalCategories: categories.length,
-                totalRegions: totalCountries + totalProvinces + totalCities,
-                totalAds: ads.length,
-                totalViews,
-                newGroupsToday,
-                serverTime: stats.serverTime
-            });
-            setRecentGroups(sortedGroups);
-        } catch {
-            alert('加载数据失败');
-        }
-    };
+    const updateServerTime = useCallback(() => {
+        const now = new Date();
+        const timeStr = now.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        setStats(prev => ({ ...prev, serverTime: timeStr }));
+    }, []);
 
     return (
         <div className="layui-fluid">
