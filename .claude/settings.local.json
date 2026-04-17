@@ -11,7 +11,8 @@
       "Bash(curl -s http://localhost:3000/api/regions/dtree)",
       "Bash(node *)",
       "Bash(rm package-lock.json)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npx wrangler *)"
     ]
   }
 }
