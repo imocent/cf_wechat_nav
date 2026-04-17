@@ -26,7 +26,7 @@ interface LayuiTable {
 }
 
 interface Layui {
-    use: (modules: string[], callback: (...args: unknown[]) => void) => void;
+    use: <T extends unknown[]>(modules: string[], callback: (...args: T) => void) => void;
     table: {
         on: (event: string, callback: (obj: { data: Category; event: string; value?: string }) => void) => void;
     };
