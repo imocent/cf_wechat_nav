@@ -1,5 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+
+declare global {
+    interface Window {
+        layui: any;
+    }
+}
 
 interface DashboardStats {
     totalGroups: number;
@@ -28,6 +34,7 @@ export default function Admin() {
         serverTime: ''
     });
     const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([]);
+    const tableRef = useRef<any>(null);
 
     useEffect(() => {
         fetchStats();
@@ -35,6 +42,12 @@ export default function Admin() {
         const timeInterval = setInterval(updateServerTime, 1000);
         return () => clearInterval(timeInterval);
     }, []);
+
+    useEffect(() => {
+        if (recentGroups.length > 0) {
+            initRecentTable();
+        }
+    }, [recentGroups]);
 
     const updateServerTime = () => {
         const now = new Date();
@@ -48,6 +61,38 @@ export default function Admin() {
             hour12: false
         });
         setStats(prev => ({ ...prev, serverTime: timeStr }));
+    };
+
+    const initRecentTable = () => {
+        const layui = window.layui;
+        if (!layui) return;
+
+        layui.use(['table'], function(table: any) {
+            tableRef.current = table.render({
+                elem: '#recentGroupsTable',
+                data: recentGroups,
+                limit: recentGroups.length,
+                cols: [[
+                    {field: 'id', title: 'ID', width: 80},
+                    {field: 'name', title: '群组名称'},
+                    {
+                        field: 'createdAt',
+                        title: '添加时间',
+                        width: 150,
+                        templet: function(d: RecentGroup) {
+                            const date = new Date(d.createdAt);
+                            return date.toLocaleString('zh-CN', {
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                    }
+                ]],
+                page: false
+            });
+        });
     };
 
     const fetchStats = async () => {
@@ -189,35 +234,7 @@ export default function Admin() {
                             <i className="layui-icon layui-icon-template-1"></i> 最近添加的群组
                         </div>
                         <div className="layui-card-body">
-                            <table className="layui-table">
-                                <thead>
-                                    <tr>
-                                        <th width="60">ID</th>
-                                        <th>群组名称</th>
-                                        <th width="150">添加时间</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {recentGroups.length > 0 ? recentGroups.map(group => (
-                                        <tr key={group.id}>
-                                            <td>{group.id}</td>
-                                            <td>{group.name}</td>
-                                            <td style={{fontSize: 12, color: '#666'}}>
-                                                {new Date(group.createdAt).toLocaleString('zh-CN', {
-                                                    month: '2-digit',
-                                                    day: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr>
-                                            <td colSpan={3}>暂无数据</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                            <table id="recentGroupsTable" lay-filter="recentGroupsTable"></table>
                         </div>
                     </div>
                 </div>
