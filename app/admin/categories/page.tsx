@@ -38,7 +38,7 @@ interface Layui {
 }
 
 export default function Categories() {
-    const tableRef = useRef<LayuiTable['render']['return'] | null>(null);
+    const tableRef = useRef<ReturnType<LayuiTable['render']> | null>(null);
     const [layuiReady, setLayuiReady] = useState(false);
     const [loading, setLoading] = useState(true);
 
