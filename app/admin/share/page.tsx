@@ -1,6 +1,12 @@
 'use client';
 import {useEffect, useState, useRef} from 'react';
 
+declare global {
+    interface Window {
+        layui: any;
+    }
+}
+
 interface Share {
     id: string;
     title: string;

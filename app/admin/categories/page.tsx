@@ -1,6 +1,12 @@
 'use client';
 import {useEffect, useRef} from 'react';
 
+declare global {
+    interface Window {
+        layui: any;
+    }
+}
+
 interface Category {
     id: string;
     name: string;

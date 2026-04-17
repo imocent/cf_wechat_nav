@@ -1,6 +1,12 @@
 'use client';
 import React, {useEffect, useState, useRef} from 'react';
 
+declare global {
+    interface Window {
+        layui: any;
+    }
+}
+
 interface Country {
     id: string;
     name: string;
